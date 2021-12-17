@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: socket-app
+  labels:
+    app: socket-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: socket-app
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+      labels:
+        app: socket-app
+    spec:
+      containers:
+        - name: socket-app
+          image: ratuliit42/chat-app:v1
+          command: ["/bin/bash"]
+          args: ["-c", "npm start"]
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
