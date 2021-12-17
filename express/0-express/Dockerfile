@@ -6,7 +6,6 @@ COPY package*.json ./
 
 RUN npm ci --only=production
 
-COPY app.js .
-COPY index.html .
+COPY server.js .
 
-CMD [ "node", "app.js" ]
+CMD [ "node", "server.js" ]
