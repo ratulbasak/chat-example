@@ -11,21 +11,126 @@ spec:
       app: socket-app
   template:
     metadata:
-      annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '9090'
+      # annotations:
+      #   prometheus.io/path: "/metrics"
+      #   prometheus.io/scrape: 'true'
+      #   prometheus.io/port: '3000'
       labels:
         app: socket-app
     spec:
       containers:
         - name: socket-app
-          image: ratuliit42/chat-app:v1
+          image: ratuliit42/chat-app:v2
           command: ["/bin/bash"]
           args: ["-c", "npm start"]
+          resources:
+            limits:
+              cpu: 80m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 80Mi
           ports:
             - name: http
               containerPort: 3000
               protocol: TCP
             - name: metrics
-              containerPort: 9090
+              containerPort: 9095
               protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: socket-service
+spec:
+  ports:
+  - port: 9095
+    targetPort: 9095
+    name: scrape
+  - port: 3000
+    targetPort: 3000
+    name: http
+  selector:
+    app: socket-app
+  type: NodePort
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: socket-app
+  labels:
+    team: devops
+spec:
+  endpoints:
+  - port: http
+    interval: 5s
+  namespaceSelector:
+    matchNames:
+    - 'default'
+  selector:
+    matchLabels:
+      app: socket-app
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-server
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: "/metrics"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9913"
+      labels:
+        app: nginx-server
+    spec:
+      # affinity:
+      #   podAntiAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #     - weight: 100
+      #       podAffinityTerm:
+      #         labelSelector:
+      #           matchExpressions:
+      #           - key: app
+      #             operator: In
+      #             values:
+      #             - nginx-server
+      #         topologyKey: kubernetes.io/hostname
+      containers:
+      - name: nginx-demo
+        image: sophos/nginx-vts-exporter
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 80m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 80Mi
+        ports:
+        - containerPort: 9913
+          name: scrape
+        - containerPort: 80
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  ports:
+  - port: 9913
+    targetPort: 9913
+    name: scrape
+  - port: 80
+    targetPort: 80
+    name: http
+  selector:
+    app: nginx-server
+  type: NodePort
