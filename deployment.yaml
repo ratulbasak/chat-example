@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: socket
-          image: ratuliit42/chat-app:v2
+          image: ratuliit42/chat-app:fix
           resources:
             limits:
               cpu: 80m

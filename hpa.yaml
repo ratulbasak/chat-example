@@ -18,16 +18,17 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: socket-custom-hpa
+  name: socket-hpa
+  namespace: demo
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: socket-app
+    name: socket
   minReplicas: 1
   maxReplicas: 10
   metrics:
   - type: Pods
     pods:
-      metricName: socket_io_connect_total
-      targetAverageValue: 4m
+      metricName: socket_io_connected
+      targetAverageValue: 20

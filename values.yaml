@@ -16,7 +16,7 @@ priorityClassName: ""
 
 # Url to access prometheus
 prometheus:
-  url: http://prometheus-operated.prometheus.svc.cluster.local
+  url: http://prometheus-operated.default.svc.cluster.local
   port: 9090
 
 replicas: 1
@@ -41,7 +41,7 @@ resources: {}
   #   memory: 128Mi
 rules:
   custom:
-    - seriesQuery: 'socket_io_connect_total{namespace!="",pod!=""}'
+    - seriesQuery: '{__name__=~"socket_io_connect_.*",namespace!="",pod!=""}'
       resources:
         overrides:
           kubernetes_namespace:
@@ -49,8 +49,8 @@ rules:
           kubernetes_pod_name:
             resource: pods
       name:
-        matches: "^(.*)_total"
-        as: "{1}_total"
+        matches: "^(.*)"
+        as: "socket_io_connect_total"
       metricsQuery: (avg(<<.Series>>{<<.LabelMatchers>>}) by (<<.GroupBy>>))
 
     # - seriesQuery: 'nginx_server_requests_total'
