@@ -25,7 +25,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: socket
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 10
   metrics:
   - type: Pods
